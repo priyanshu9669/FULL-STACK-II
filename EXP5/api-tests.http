@@ -1,0 +1,132 @@
+### ==============================================================================
+### Unit 2: Experiment 5 - Spring Boot REST API Design & Exception Handling
+### Interactive HTTP Test Suite (Use with VS Code REST Client or Thunder Client)
+### Base URL: http://localhost:8080
+### ==============================================================================
+
+@baseUrl = http://localhost:8080
+@customCorrelationId = corr-test-client-98765
+
+### ------------------------------------------------------------------------------
+### HEALTH CHECK & ARCHITECTURE OVERVIEW
+### ------------------------------------------------------------------------------
+GET {{baseUrl}}/api/health
+X-Correlation-ID: {{customCorrelationId}}
+
+### ------------------------------------------------------------------------------
+### ASSIGNMENT 1 & CORE: UNIFORM RESPONSE STRUCTURE & HTTP METHODS
+### ------------------------------------------------------------------------------
+
+### 1.1 GET All Posts
+GET {{baseUrl}}/api/posts
+X-Correlation-ID: {{customCorrelationId}}
+
+### 1.2 GET Posts Filtered by Category
+GET {{baseUrl}}/api/posts?category=Architecture
+X-Correlation-ID: {{customCorrelationId}}
+
+### 1.3 GET Posts with Search Keyword
+GET {{baseUrl}}/api/posts?search=Fielding
+X-Correlation-ID: {{customCorrelationId}}
+
+### 1.4 GET Post by ID (Existing Resource)
+GET {{baseUrl}}/api/posts/1
+X-Correlation-ID: {{customCorrelationId}}
+
+### 1.5 POST Create New Post (Valid Input)
+POST {{baseUrl}}/api/posts
+Content-Type: application/json
+X-Correlation-ID: {{customCorrelationId}}
+
+{
+  "title": "Decoupled Web Services with Spring Boot",
+  "content": "This article discusses REST architectural constraints, stateless session management, and correlation IDs.",
+  "author": "roy.fielding@uci.edu",
+  "category": "Architecture"
+}
+
+### 1.6 PUT Update Existing Post by ID
+PUT {{baseUrl}}/api/posts/1
+Content-Type: application/json
+X-Correlation-ID: {{customCorrelationId}}
+
+{
+  "title": "Understanding REST Architecture Principles (Updated 2nd Edition)",
+  "content": "REST is a stateless, client-server architectural style providing uniform resource-based identifiers (URIs) and standard HTTP methods.",
+  "author": "Dr. Roy Fielding",
+  "category": "Architecture"
+}
+
+### 1.7 DELETE Post by ID
+DELETE {{baseUrl}}/api/posts/4
+X-Correlation-ID: {{customCorrelationId}}
+
+
+### ------------------------------------------------------------------------------
+### ASSIGNMENT 2: BEAN VALIDATION TESTING (Invalid Inputs)
+### ------------------------------------------------------------------------------
+
+### 2.1 Invalid Input: Empty fields (Fails @NotBlank and @Size)
+POST {{baseUrl}}/api/posts
+Content-Type: application/json
+X-Correlation-ID: {{customCorrelationId}}
+
+{
+  "title": "",
+  "content": "",
+  "author": "",
+  "category": ""
+}
+
+### 2.2 Invalid Input: Title too short, Content too short, Invalid author format
+POST {{baseUrl}}/api/posts
+Content-Type: application/json
+X-Correlation-ID: {{customCorrelationId}}
+
+{
+  "title": "Hi",
+  "content": "Short",
+  "author": "@invalid!author#",
+  "category": "Spring"
+}
+
+
+### ------------------------------------------------------------------------------
+### ASSIGNMENT 4: GLOBAL EXCEPTION HANDLING (@RestControllerAdvice)
+### ------------------------------------------------------------------------------
+
+### 4.1 Resource Not Found (404) - ResourceNotFoundException
+GET {{baseUrl}}/api/posts/999999
+X-Correlation-ID: {{customCorrelationId}}
+
+### 4.2 Bad Request (400) - BadRequestException (Domain logic violation)
+GET {{baseUrl}}/api/posts/error/trigger-bad-request
+X-Correlation-ID: {{customCorrelationId}}
+
+### 4.3 Unhandled Internal Server Error (500) - Generic Exception Handler
+GET {{baseUrl}}/api/posts/error/trigger-500
+X-Correlation-ID: {{customCorrelationId}}
+
+### 4.4 Method Not Supported (405) - HttpRequestMethodNotSupportedException
+POST {{baseUrl}}/api/health
+X-Correlation-ID: {{customCorrelationId}}
+
+### 4.5 Malformed JSON Body (400) - HttpMessageNotReadableException
+POST {{baseUrl}}/api/posts
+Content-Type: application/json
+X-Correlation-ID: {{customCorrelationId}}
+
+{
+  "title": "Missing closing bracket
+
+
+### ------------------------------------------------------------------------------
+### ASSIGNMENTS 3 & 5: LOGGING FILTER & CORRELATION ID TRACING
+### ------------------------------------------------------------------------------
+
+### 5.1 Fetch Recent Request Traces (Verify MDC Correlation IDs and Execution Times)
+GET {{baseUrl}}/api/traces
+X-Correlation-ID: {{customCorrelationId}}
+
+### 5.2 Clear Request Traces Cache
+DELETE {{baseUrl}}/api/traces

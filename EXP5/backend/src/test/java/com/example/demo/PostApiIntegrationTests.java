@@ -1,0 +1,111 @@
+package com.example.demo;
+
+import com.example.demo.dto.PostRequest;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+
+import static org.hamcrest.Matchers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+@SpringBootTest
+@AutoConfigureMockMvc
+public class PostApiIntegrationTests {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @Test
+    @DisplayName("Assignment 1: Verify Standardized ApiResponse structure and Correlation ID header on GET /api/posts")
+    void testGetAllPostsStandardResponse() throws Exception {
+        mockMvc.perform(get("/api/posts")
+                .header("X-Correlation-ID", "test-corr-12345"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("X-Correlation-ID", "test-corr-12345"))
+                .andExpect(header().exists("X-Execution-Time-Ms"))
+                .andExpect(jsonPath("$.success", is(true)))
+                .andExpect(jsonPath("$.message", notNullValue()))
+                .andExpect(jsonPath("$.data", hasSize(greaterThanOrEqualTo(1))))
+                .andExpect(jsonPath("$.statusCode", is(200)))
+                .andExpect(jsonPath("$.timestamp", notNullValue()));
+    }
+
+    @Test
+    @DisplayName("Assignment 2: Test Bean Validation failure with invalid inputs (empty fields, short content)")
+    void testBeanValidationFailure() throws Exception {
+        // Invalid request: empty fields
+        PostRequest invalidRequest = new PostRequest("", "", "", "");
+
+        mockMvc.perform(post("/api/posts")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(invalidRequest)))
+                .andExpect(status().isBadRequest())
+                .andExpect(header().exists("X-Correlation-ID"))
+                .andExpect(jsonPath("$.success", is(false)))
+                .andExpect(jsonPath("$.errorCode", is("VALIDATION_FAILED")))
+                .andExpect(jsonPath("$.statusCode", is(400)))
+                .andExpect(jsonPath("$.validationErrors.title", notNullValue()))
+                .andExpect(jsonPath("$.validationErrors.content", notNullValue()))
+                .andExpect(jsonPath("$.validationErrors.author", notNullValue()));
+    }
+
+    @Test
+    @DisplayName("Assignment 2 & 1: Test successful post creation with valid inputs")
+    void testCreatePostSuccess() throws Exception {
+        PostRequest validRequest = new PostRequest(
+                "Designing Scalable REST APIs",
+                "This article covers uniform interfaces, stateless architecture, and HTTP status codes in detail.",
+                "jane.dev@example.com",
+                "Tutorials"
+        );
+
+        mockMvc.perform(post("/api/posts")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(validRequest)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.success", is(true)))
+                .andExpect(jsonPath("$.statusCode", is(201)))
+                .andExpect(jsonPath("$.data.title", is("Designing Scalable REST APIs")))
+                .andExpect(jsonPath("$.data.author", is("jane.dev@example.com")))
+                .andExpect(jsonPath("$.data.id", notNullValue()));
+    }
+
+    @Test
+    @DisplayName("Assignment 4: Global Exception Handling for 404 Not Found (ResourceNotFoundException)")
+    void testResourceNotFoundException() throws Exception {
+        mockMvc.perform(get("/api/posts/999999"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.success", is(false)))
+                .andExpect(jsonPath("$.errorCode", is("RESOURCE_NOT_FOUND")))
+                .andExpect(jsonPath("$.statusCode", is(404)))
+                .andExpect(jsonPath("$.path", is("/api/posts/999999")));
+    }
+
+    @Test
+    @DisplayName("Assignment 4: Global Exception Handling for 500 Uncaught Exception")
+    void testGenericInternalServerError() throws Exception {
+        mockMvc.perform(get("/api/posts/error/trigger-500"))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.success", is(false)))
+                .andExpect(jsonPath("$.errorCode", is("INTERNAL_SERVER_ERROR")))
+                .andExpect(jsonPath("$.statusCode", is(500)));
+    }
+
+    @Test
+    @DisplayName("Assignment 5: Auto-generate Correlation ID if not provided by client")
+    void testAutoGeneratedCorrelationId() throws Exception {
+        mockMvc.perform(get("/api/posts"))
+                .andExpect(status().isOk())
+                .andExpect(header().exists("X-Correlation-ID"))
+                .andExpect(header().string("X-Correlation-ID", not(emptyString())));
+    }
+}
