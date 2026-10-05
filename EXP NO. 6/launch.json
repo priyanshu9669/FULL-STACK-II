@@ -1,0 +1,16 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot - ScalableReadApisApplication",
+            "request": "launch",
+            "mainClass": "com.experiment6.scalablereadapis.ScalableReadApisApplication",
+            "projectName": "scalable-read-apis",
+            "args": "",
+            "env": {
+                "SPRING_PROFILES_ACTIVE": "default"
+            }
+        }
+    ]
+}

@@ -1,0 +1,9 @@
+{
+    "java.configuration.updateBuildConfiguration": "automatic",
+    "maven.executable.path": "${workspaceFolder}\\.maven\\apache-maven-3.9.9\\bin\\mvn.cmd",
+    "java.compile.nullAnalysis.mode": "automatic",
+    "files.exclude": {
+        "**/.git": true,
+        "**/.DS_Store": true
+    }
+}
